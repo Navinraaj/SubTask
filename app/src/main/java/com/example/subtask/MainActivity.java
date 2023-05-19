@@ -1,4 +1,4 @@
-package com.example.subtask;
+package com.example.multiplefeaturestask;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -16,45 +16,54 @@ import android.widget.SeekBar;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * MainActivity class extending AppCompatActivity.
+ * This activity covers various features like camera capture, media player, and video playing.
+ *
+ * @author Navin
+ */
 public class MainActivity extends AppCompatActivity {
-    Button camera, PA,OAP;
-
-    private MediaPlayer mediaPlayer,MPO;
+    Button camera, PA, OAP;
+    private MediaPlayer mediaPlayer, MPO;
     private Button playButton;
     private Button pauseButton;
     private SeekBar seekBar;
     Button videoButton;
     private boolean isAudioPlaying = false;
     private String audioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3";
-
     private static final int CAMERA_REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Initialization of components
         camera = findViewById(R.id.camera);
         OAP = findViewById(R.id.OAP);
         playButton = findViewById(R.id.play_button);
         pauseButton = findViewById(R.id.pause_button);
         seekBar = findViewById(R.id.seek_bar);
         videoButton = findViewById(R.id.video_button);
+
         Uri uri = Uri.parse(audioUrl);
         MPO = new MediaPlayer();
         MPO.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
+        // Setup Camera Capture
         camera.setOnClickListener(view -> {
             Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             startActivityForResult(cameraIntent, CAMERA_REQUEST_CODE);
         });
 
+        // Setup Audio Playing
         OAP.setOnClickListener(view -> {
             if (MPO.isPlaying()) {
                 MPO.pause();
                 playButton.setText("Play");
             } else {
                 try {
-                    MPO.setDataSource(MainActivity.this,uri);
+                    MPO.setDataSource(MainActivity.this, uri);
                     MPO.prepare();
                     MPO.start();
                     playButton.setText("Pause");
@@ -64,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Setup Video Playing
         videoButton.setOnClickListener(view -> {
             String videoUrl = "http://techslides.com/demos/sample-videos/small.mp4";
             Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -71,18 +81,13 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-
+        // Setup Media Player
         playButton.setOnClickListener(view -> {
 
             mediaPlayer = MediaPlayer.create(this, R.raw.audio_file);
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             seekBar.setMax(mediaPlayer.getDuration());
-            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    updateSeekBar();
-                }
-            });
+            mediaPlayer.setOnPreparedListener(mp -> updateSeekBar());
             if (!isAudioPlaying) {
                 mediaPlayer.start();
                 isAudioPlaying = true;
@@ -120,19 +125,20 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Method to update the progress of the SeekBar as the media player progresses.
+     */
     private void updateSeekBar() {
         seekBar.setProgress(mediaPlayer.getCurrentPosition());
         if (isAudioPlaying) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    updateSeekBar();
-                }
-            };
+            Runnable runnable = this::updateSeekBar;
             seekBar.postDelayed(runnable, TimeUnit.SECONDS.toMillis(1));
         }
     }
 
+    /**
+     * Releases the MediaPlayer resources when activity is destroyed.
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -142,12 +148,19 @@ public class MainActivity extends AppCompatActivity {
         MPO = null;
     }
 
+    /**
+     * Handles the result from other activities started for result.
+     * @param requestCode code for the request
+     * @param resultCode result code from the activity
+     * @param data data returned from the activity
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == CAMERA_REQUEST_CODE && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
+            // TODO: Use the captured image
         }
     }
 }
